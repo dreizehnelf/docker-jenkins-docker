@@ -1,33 +1,14 @@
-# based on treyyoder's reference @ https://container-solutions.com/running-docker-in-jenkins-in-docker/
+# https://github.com/Logimethods/docker-jenkins/blob/master/Dockerfile
 
-# use official jenkins image as base
 FROM jenkins/jenkins:lts
 
-# switch to root so we can install docker
 USER root
+RUN apt-get -qq update \
+   && apt-get -qq -y install \
+   curl
 
-# update our package information
-RUN apt-get update \
-    && apt-get install -y sudo apt-transport-https ca-certificates curl software-properties-common \
-    && rm -rf /var/lib/apt/lists/*
+RUN curl -sSL https://get.docker.com/ | sh
 
-# add the jenkins user to the sudoers
-RUN echo "jenkins ALL=NOPASSWD: ALL" >> /etc/sudoers
+RUN usermod -a -G staff,docker jenkins
 
-# get and add docker's gpg keys
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o docker.key \
-	&& apt-key add docker.key \
-	&& rm docker.key
-
-# add the docker repository
-RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
-
-# update the package information to also have the new docker stuff
-RUN apt-get update
-RUN apt-cache policy docker-ce
-
-# install docker
-RUN apt-get install -y docker-ce
-
-# switch back to the jenkins user
 USER jenkins
